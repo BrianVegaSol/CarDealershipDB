@@ -134,7 +134,7 @@ public class Main {
                 5) Color
                 6) Mileage
                 7) Price
-                8) Sell Status
+                8) Sold (0 for false/ 1 for true)
                 """);
         int input = -1;
         input = scanner.nextInt();
@@ -153,38 +153,41 @@ public class Main {
             default -> System.out.println("Invalid Input");
         }
         System.out.print("Enter new value: ");
-        var setValue = switch (columnToUpdate) {
-            case "Year", "Odometer" -> int setValue = scanner.nextInt();
+        Object setValue = switch (columnToUpdate) {
+            case "Year", "Odometer" -> scanner.nextInt();
             case "Model", "Vehicle Type", "Color" -> scanner.nextLine();
             case "Price" -> scanner.nextDouble();
             case "Sold" -> scanner.nextByte();
-            default -> {
+            default -> throw new IllegalArgumentException("Invalid Input");
+        };
+
+        if (setValue instanceof Byte) {
+            if ((byte) setValue > 1 || (byte) setValue < 0) {
                 throw new IllegalArgumentException("Invalid Input");
             }
-        };
+        }
 
         String sql = "UPDATE [BVS_Table2:Vehicles] SET " + columnToUpdate + " = ?" + " WHERE id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
-            if (setValue instanceof String) {
-                stmt.setString(1, (String) setValue);
-            } else if (setValue instanceof Integer) {
-                stmt.setInt(1, (Integer) setValue);
-            } else if (setValue instanceof Double) {
-                stmt.setDouble(1, (Double) setValue);
-            } else {
-                throw new IllegalArgumentException("Unsupported data type for newValue: " + setValue.getClass().getName());
+            switch (setValue) {
+                case String s -> stmt.setString(1, s);
+                case Integer i -> stmt.setInt(1, i);
+                case Double d -> stmt.setDouble(1, d);
+                case Byte b -> stmt.setByte(1, b);
+                case null, default ->
+                        throw new IllegalArgumentException("Unsupported data type for newValue: " + setValue.getClass().getName());
             }
 
             //stmt.setString(1, newName);
             //stmt.setString(2, newFlavor);
-            stmt.setInt(1, setValue);
+            //stmt.setInt(1, setValue);
             stmt.setInt(2, VIN);
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected > 0) {
-                System.out.println("Cookie updated successfully!");
+                System.out.println("Vehicle updated successfully!");
             } else {
-                System.out.println("No cookie found with the given ID.");
+                System.out.println("No Vehicle found with the given VIN.");
             }
         }
     }
