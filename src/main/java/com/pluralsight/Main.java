@@ -1,6 +1,7 @@
 package com.pluralsight;
 
 import java.sql.*;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class Main {
@@ -103,10 +104,10 @@ public class Main {
                 System.out.println("Year: " + rs.getInt("Year") +
                         "\nMake: " + rs.getString("Make") +
                         "\nModel: " + rs.getString("Model") +
-                "\nVehicle Type: " + rs.getString("VehicleType") +
-                "\nColor: " + rs.getString("Color") +
+                        "\nVehicle Type: " + rs.getString("VehicleType") +
+                        "\nColor: " + rs.getString("Color") +
                         "\nMileage: " + rs.getInt("Odometer") +
-                                "\nPrice: $" + rs.getDouble("Price") +
+                        "\nPrice: $" + rs.getDouble("Price") +
                         "\nisSold: " + rs.getByte("Sold") + "\n\n"
                 );
             }
@@ -114,21 +115,71 @@ public class Main {
     }
 
     // UPDATE operation
-    private static void updateVehicleRecord(Connection connection, Scanner scanner) throws SQLException {
-        System.out.print("Enter the ID of the cookie to update: ");
-        int id = scanner.nextInt();
-        scanner.nextLine(); // Consume newline
-        //What would you like to update?
-        System.out.print("Enter new name: ");
-        String newName = scanner.nextLine();
-        System.out.print("Enter new flavor: ");
-        String newFlavor = scanner.nextLine();
+    /*private static <T> HashMap <Integer, T> valuesToUpdate () {
+       <T> HashMap <Integer, T> map =  new HashMap<>();
+    }*/
 
-        String sql = "UPDATE Cookies.Cookie SET name = ?, flavor = ? WHERE id = ?";
+    private static void updateVehicleRecord(Connection connection, Scanner scanner) throws SQLException {
+        viewVehicleRecords(connection);
+        String columnToUpdate = "";
+        System.out.print("Enter the VIN of the Vehicle to update: ");
+        int VIN = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+        System.out.println("""
+                What would you like to update?
+                1) Year
+                2) Make
+                3) Model
+                4) Vehicle Type
+                5) Color
+                6) Mileage
+                7) Price
+                8) Sell Status
+                """);
+        int input = -1;
+        input = scanner.nextInt();
+        switch (input) {
+            case 0 -> {
+                return;
+            }
+            case 1 -> columnToUpdate = "Year";
+            case 2 -> columnToUpdate = "Make";
+            case 3 -> columnToUpdate = "Model";
+            case 4 -> columnToUpdate = "Vehicle Type";
+            case 5 -> columnToUpdate = "Color";
+            case 6 -> columnToUpdate = "Odometer";
+            case 7 -> columnToUpdate = "Price";
+            case 8 -> columnToUpdate = "Sold";
+            default -> System.out.println("Invalid Input");
+        }
+        System.out.print("Enter new value: ");
+        var setValue = switch (columnToUpdate) {
+            case "Year", "Odometer" -> int setValue = scanner.nextInt();
+            case "Model", "Vehicle Type", "Color" -> scanner.nextLine();
+            case "Price" -> scanner.nextDouble();
+            case "Sold" -> scanner.nextByte();
+            default -> {
+                throw new IllegalArgumentException("Invalid Input");
+            }
+        };
+
+        String sql = "UPDATE [BVS_Table2:Vehicles] SET " + columnToUpdate + " = ?" + " WHERE id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, newName);
-            stmt.setString(2, newFlavor);
-            stmt.setInt(3, id);
+
+            if (setValue instanceof String) {
+                stmt.setString(1, (String) setValue);
+            } else if (setValue instanceof Integer) {
+                stmt.setInt(1, (Integer) setValue);
+            } else if (setValue instanceof Double) {
+                stmt.setDouble(1, (Double) setValue);
+            } else {
+                throw new IllegalArgumentException("Unsupported data type for newValue: " + setValue.getClass().getName());
+            }
+
+            //stmt.setString(1, newName);
+            //stmt.setString(2, newFlavor);
+            stmt.setInt(1, setValue);
+            stmt.setInt(2, VIN);
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected > 0) {
                 System.out.println("Cookie updated successfully!");
