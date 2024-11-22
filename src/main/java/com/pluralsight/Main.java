@@ -101,7 +101,8 @@ public class Main {
              ResultSet rs = stmt.executeQuery(sql)) {
             System.out.println("\nVehicle Records:");
             while (rs.next()) {
-                System.out.println("Year: " + rs.getInt("Year") +
+                System.out.println("VIN: " + rs.getInt("VINNumber") +
+                        "\nYear: " + rs.getInt("Year") +
                         "\nMake: " + rs.getString("Make") +
                         "\nModel: " + rs.getString("Model") +
                         "\nVehicle Type: " + rs.getString("VehicleType") +
@@ -138,6 +139,7 @@ public class Main {
                 """);
         int input = -1;
         input = scanner.nextInt();
+        scanner.nextLine();
         switch (input) {
             case 0 -> {
                 return;
@@ -145,7 +147,7 @@ public class Main {
             case 1 -> columnToUpdate = "Year";
             case 2 -> columnToUpdate = "Make";
             case 3 -> columnToUpdate = "Model";
-            case 4 -> columnToUpdate = "Vehicle Type";
+            case 4 -> columnToUpdate = "VehicleType";
             case 5 -> columnToUpdate = "Color";
             case 6 -> columnToUpdate = "Odometer";
             case 7 -> columnToUpdate = "Price";
@@ -155,7 +157,7 @@ public class Main {
         System.out.print("Enter new value: ");
         Object setValue = switch (columnToUpdate) {
             case "Year", "Odometer" -> scanner.nextInt();
-            case "Model", "Vehicle Type", "Color" -> scanner.nextLine();
+            case "Model", "VehicleType", "Color" -> scanner.nextLine();
             case "Price" -> scanner.nextDouble();
             case "Sold" -> scanner.nextByte();
             default -> throw new IllegalArgumentException("Invalid Input");
@@ -167,7 +169,7 @@ public class Main {
             }
         }
 
-        String sql = "UPDATE [BVS_Table2:Vehicles] SET " + columnToUpdate + " = ?" + " WHERE id = ?";
+        String sql = "UPDATE [BVS_Table2:Vehicles] SET " + columnToUpdate + " = ?" + " WHERE VINNumber = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             switch (setValue) {
